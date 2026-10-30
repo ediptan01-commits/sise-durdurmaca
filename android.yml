@@ -1,0 +1,55 @@
+name: Android APK ve AAB
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android platform dosyalarini olustur
+        run: flutter create --platforms=android --org com.teknolojix --project-name sise_durdurmaca .
+
+      - name: Ornek Flutter test dosyasini temizle
+        run: rm -f test/widget_test.dart
+
+      - name: Paketleri indir
+        run: flutter pub get
+
+      - name: Dart analiz
+        run: flutter analyze
+
+      - name: Testler
+        run: flutter test
+
+      - name: APK olustur
+        run: flutter build apk --release
+
+      - name: AAB olustur
+        run: flutter build appbundle --release
+
+      - name: APK ve AAB dosyalarini indirilebilir yap
+        uses: actions/upload-artifact@v4
+        with:
+          name: sise-durdurmaca-android
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          retention-days: 14
